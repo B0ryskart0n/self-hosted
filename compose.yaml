@@ -1,6 +1,6 @@
 services:
   nextcloud_db:
-    image: mariadb
+    image: mariadb:lts
     restart: unless-stopped
     environment:
       # The password will appear in the initial logs
