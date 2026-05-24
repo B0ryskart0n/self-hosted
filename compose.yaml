@@ -1,0 +1,43 @@
+services:
+  nextcloud_db:
+    image: mariadb
+    restart: unless-stopped
+    # environment:
+    #   MYSQL_ROOT_PASSWORD: change_this_root_password
+    #   MYSQL_DATABASE: nextcloud
+    #   MYSQL_USER: nextcloud
+    #   MYSQL_PASSWORD: change_this_db_password
+    volumes:
+      - ./nextcloud_db:/var/lib/mysql
+    networks:
+      - nextcloud-net
+    # copied from https://mariadb.com/docs/server/server-management/automated-mariadb-deployment-and-administration/docker-and-mariadb/using-healthcheck-sh
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+  nextcloud:
+    image: nextcloud:stable
+    restart: unless-stopped
+    depends_on:
+      nextcloud_db:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    # environment:
+    #   MYSQL_DATABASE: nextcloud
+    #   MYSQL_USER: nextcloud
+    #   MYSQL_PASSWORD: nextcloud_password
+    #   MYSQL_HOST: nextcloud_db
+    #   NEXTCLOUD_ADMIN_USER: admin
+    #   NEXTCLOUD_ADMIN_PASSWORD: admin_password
+    #   NEXTCLOUD_TRUSTED_DOMAINS: "localhost"
+    volumes:
+      - ./nextcloud:/var/www/html
+    networks:
+      - nextcloud-net
+networks:
+  nextcloud-net:
+    driver: bridge
